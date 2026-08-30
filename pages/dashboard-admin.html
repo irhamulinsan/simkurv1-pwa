@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#f18518">
+  <title>Dashboard Admin &middot; SIMKUR MA'HAD</title>
+  <link rel="manifest" href="../manifest.json">
+  <link rel="icon" href="../icons/icon-192.png">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="who">
+      <strong id="nama-admin">&nbsp;</strong>
+      <span>Admin</span>
+    </div>
+    <button type="button" class="btn-logout" id="btn-logout">Keluar</button>
+  </header>
+
+  <main class="app">
+    <!-- ============ RINGKASAN ============ -->
+    <section class="card">
+      <h2>Ringkasan Hari Ini</h2>
+      <p class="status-msg info" id="ringkas-status">Memuat...</p>
+      <div id="ringkas-body" hidden>
+        <div id="ringkas-kehadiran"></div>
+        <div id="ringkas-belum-kbm"></div>
+        <details class="raw">
+          <summary>Lihat data mentah (ambilDataCepat)</summary>
+          <pre id="ringkas-raw"></pre>
+        </details>
+      </div>
+    </section>
+
+    <!-- ============ STATUS NILAI GURU ============ -->
+    <section class="card">
+      <h2>Status Nilai Guru</h2>
+      <div class="field">
+        <label for="semester">Semester</label>
+        <select id="semester">
+          <option value="1">Semester 1</option>
+          <option value="2">Semester 2</option>
+        </select>
+      </div>
+      <p class="status-msg info" id="status-nilai-msg" hidden></p>
+      <div class="table-wrap" id="status-nilai-table"></div>
+    </section>
+  </main>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/guard.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    var user = currentUser();
+    document.getElementById('nama-admin').textContent = user.nama || 'Admin';
+    document.getElementById('btn-logout').addEventListener('click', logout);
+
+    function setMsg(el, kind, msg) {
+      el.className = 'status-msg ' + kind;
+      el.textContent = msg;
+      el.hidden = false;
+    }
+
+    // Render array-of-objects jadi tabel sederhana.
+    function renderTable(container, rows) {
+      container.innerHTML = '';
+      if (!Array.isArray(rows) || !rows.length) {
+        var p = document.createElement('p');
+        p.className = 'status-msg info';
+        p.textContent = 'Tidak ada data.';
+        container.appendChild(p);
+        return;
+      }
+      var cols = Object.keys(rows[0]);
+      var table = document.createElement('table');
+      table.className = 'simple';
+
+      var thead = document.createElement('thead');
+      var htr = document.createElement('tr');
+      cols.forEach(function (c) {
+        var th = document.createElement('th');
+        th.textContent = c;
+        htr.appendChild(th);
+      });
+      thead.appendChild(htr);
+      table.appendChild(thead);
+
+      var tbody = document.createElement('tbody');
+      rows.forEach(function (row) {
+        var tr = document.createElement('tr');
+        cols.forEach(function (c) {
+          var td = document.createElement('td');
+          var v = row[c];
+          td.textContent = (v && typeof v === 'object') ? JSON.stringify(v) : String(v == null ? '' : v);
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      container.appendChild(table);
+    }
+
+    // Coba tebak daftar dari beberapa nama field yang mungkin.
+    function pickArray(obj, keys) {
+      for (var i = 0; i < keys.length; i++) {
+        if (Array.isArray(obj[keys[i]])) return obj[keys[i]];
+      }
+      return null;
+    }
+
+    // ---------- Ringkasan ----------
+    (async function loadRingkasan() {
+      var statusEl = document.getElementById('ringkas-status');
+      var bodyEl = document.getElementById('ringkas-body');
+      try {
+        var r = await apiCall('getDashboardAdmin', {});
+        console.log('getDashboardAdmin ->', r);
+        if (!r || !r.success) {
+          setMsg(statusEl, 'err', (r && r.message) || 'Gagal memuat ringkasan.');
+          return;
+        }
+        var data = r.data || {};
+        document.getElementById('ringkas-raw').textContent = JSON.stringify(data, null, 2);
+
+        // Kehadiran hari ini — tampilkan apa adanya kalau field belum jelas.
+        var kehEl = document.getElementById('ringkas-kehadiran');
+        var keh = data.kehadiran || data.kehadiranHariIni || data.absensiHariIni || null;
+        if (keh && typeof keh === 'object' && !Array.isArray(keh)) {
+          var html = '<h2 style="font-size:14px;margin:4px 0 8px">Kehadiran Hari Ini</h2>';
+          Object.keys(keh).forEach(function (k) {
+            html += '<div class="nilai-item"><span class="mapel">' + k +
+                    '</span><span class="angka">' + keh[k] + '</span></div>';
+          });
+          kehEl.innerHTML = html;
+        }
+
+        // Guru belum KBM.
+        var belumEl = document.getElementById('ringkas-belum-kbm');
+        var belum = pickArray(data, ['guruBelumKBM', 'belumKBM', 'guruBelumInput', 'guruBelum']);
+        if (belum) {
+          var list = '<h2 style="font-size:14px;margin:14px 0 8px">Guru Belum KBM (' + belum.length + ')</h2>';
+          if (!belum.length) {
+            list += '<p class="status-msg ok">Semua guru sudah input KBM.</p>';
+          } else {
+            list += '<ul style="margin:0;padding-left:18px;font-size:14px">';
+            belum.forEach(function (g) {
+              list += '<li>' + (typeof g === 'string' ? g : (g.nama || g.name || JSON.stringify(g))) + '</li>';
+            });
+            list += '</ul>';
+          }
+          belumEl.innerHTML = list;
+        }
+
+        statusEl.hidden = true;
+        bodyEl.hidden = false;
+      } catch (err) {
+        setMsg(statusEl, 'err', 'Tidak dapat terhubung ke server.');
+        console.error(err);
+      }
+    })();
+
+    // ---------- Status Nilai Guru ----------
+    var semEl = document.getElementById('semester');
+    var snMsg = document.getElementById('status-nilai-msg');
+    var snTable = document.getElementById('status-nilai-table');
+
+    async function loadStatusNilai() {
+      setMsg(snMsg, 'info', 'Memuat...');
+      snTable.innerHTML = '';
+      try {
+        var r = await apiCall('getStatusNilaiGuru', { semester: semEl.value });
+        console.log('getStatusNilaiGuru ->', r);
+        if (!r || !r.success) {
+          setMsg(snMsg, 'err', (r && r.message) || 'Gagal memuat status nilai.');
+          return;
+        }
+        var rows = Array.isArray(r.data) ? r.data
+                 : pickArray(r.data || {}, ['status', 'data', 'guru', 'list']) || [];
+        snMsg.hidden = true;
+        renderTable(snTable, rows);
+      } catch (err) {
+        setMsg(snMsg, 'err', 'Tidak dapat terhubung ke server.');
+        console.error(err);
+      }
+    }
+
+    semEl.addEventListener('change', loadStatusNilai);
+    loadStatusNilai();
+  })();
+  </script>
+</body>
+</html>

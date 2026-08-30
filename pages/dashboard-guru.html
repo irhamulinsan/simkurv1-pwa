@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#f18518">
+  <title>Dashboard Guru &middot; SIMKUR MA'HAD</title>
+  <link rel="manifest" href="../manifest.json">
+  <link rel="icon" href="../icons/icon-192.png">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="who">
+      <strong id="nama-guru">&nbsp;</strong>
+      <span>Guru</span>
+    </div>
+    <button type="button" class="btn-logout" id="btn-logout">Keluar</button>
+  </header>
+
+  <main class="app">
+    <!-- ============ INPUT KBM & ABSENSI ============ -->
+    <section class="card">
+      <h2>Input KBM &amp; Absensi</h2>
+
+      <form id="form-kbm">
+        <div class="form-grid">
+          <div class="field">
+            <label for="kbm-kelas">Kelas</label>
+            <select id="kbm-kelas" required></select>
+          </div>
+          <div class="field">
+            <label for="kbm-sesi">Sesi</label>
+            <select id="kbm-sesi" required></select>
+          </div>
+          <div class="field full">
+            <label for="kbm-mapel">Mata Pelajaran</label>
+            <input type="text" id="kbm-mapel" name="mapel" autocomplete="off" required>
+          </div>
+          <div class="field full">
+            <label for="kbm-materi">Materi</label>
+            <textarea id="kbm-materi" name="materi" required></textarea>
+          </div>
+          <div class="field full">
+            <label for="kbm-catatan">Catatan (opsional)</label>
+            <textarea id="kbm-catatan" name="catatan"></textarea>
+          </div>
+        </div>
+        <button type="submit" class="btn-block" id="kbm-submit">Simpan KBM</button>
+        <p class="status-msg info" id="kbm-status" hidden></p>
+      </form>
+    </section>
+
+    <!-- ============ INPUT NILAI ============ -->
+    <section class="card">
+      <h2>
+        Input Nilai
+        <span class="hint">Pilih kelas lalu muat daftar santri.</span>
+      </h2>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="nilai-kelas">Kelas</label>
+          <select id="nilai-kelas"></select>
+        </div>
+        <div class="field">
+          <label for="nilai-semester">Semester</label>
+          <select id="nilai-semester">
+            <option value="1">Semester 1</option>
+            <option value="2">Semester 2</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="nilai-mapel">Mapel ID</label>
+          <input type="text" id="nilai-mapel" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="nilai-jenis">Jenis</label>
+          <input type="text" id="nilai-jenis" autocomplete="off" placeholder="UH / UTS / UAS">
+        </div>
+        <div class="field">
+          <label for="nilai-nomor">Nomor Ulangan</label>
+          <input type="number" id="nilai-nomor" min="1" step="1" value="1">
+        </div>
+        <div class="field">
+          <label for="nilai-ket">Keterangan</label>
+          <input type="text" id="nilai-ket" autocomplete="off">
+        </div>
+      </div>
+
+      <button type="button" class="btn-block" id="btn-muat-santri">Muat Santri</button>
+      <p class="status-msg info" id="nilai-status" hidden></p>
+
+      <div id="santri-list"></div>
+
+      <button type="button" class="btn-block" id="btn-simpan-nilai" hidden>Simpan Semua</button>
+    </section>
+  </main>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/guard.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    // Daftar kelas — PLACEHOLDER. Ganti value dengan kelasId asli dari sheet.
+    var KELAS = [
+      { id: '7',  label: 'Kelas 7' },
+      { id: '8',  label: 'Kelas 8' },
+      { id: '9',  label: 'Kelas 9' },
+      { id: '10', label: 'Kelas 10' },
+      { id: '11', label: 'Kelas 11' },
+      { id: '12', label: 'Kelas 12' }
+    ];
+    var SESI = [1, 2, 3, 4, 5, 6, 7, 8];
+
+    var user = currentUser();
+    document.getElementById('nama-guru').textContent = user.nama || 'Guru';
+    document.getElementById('btn-logout').addEventListener('click', logout);
+
+    function fillSelect(el, items, getVal, getLabel) {
+      el.innerHTML = '';
+      items.forEach(function (it) {
+        var opt = document.createElement('option');
+        opt.value = getVal(it);
+        opt.textContent = getLabel(it);
+        el.appendChild(opt);
+      });
+    }
+
+    fillSelect(document.getElementById('kbm-kelas'), KELAS,
+      function (k) { return k.id; }, function (k) { return k.label; });
+    fillSelect(document.getElementById('nilai-kelas'), KELAS,
+      function (k) { return k.id; }, function (k) { return k.label; });
+    fillSelect(document.getElementById('kbm-sesi'), SESI,
+      function (s) { return s; }, function (s) { return 'Sesi ' + s; });
+
+    function setStatus(el, kind, msg) {
+      el.className = 'status-msg ' + kind;
+      el.textContent = msg;
+      el.hidden = false;
+    }
+
+    function today() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    // ---------- Simpan KBM ----------
+    var formKbm = document.getElementById('form-kbm');
+    var kbmBtn = document.getElementById('kbm-submit');
+    var kbmStatus = document.getElementById('kbm-status');
+
+    formKbm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      kbmBtn.disabled = true;
+      setStatus(kbmStatus, 'info', 'Menyimpan...');
+
+      var payload = {
+        guru: user.nama,
+        kelas: document.getElementById('kbm-kelas').value,
+        mapel: document.getElementById('kbm-mapel').value.trim(),
+        sesi: document.getElementById('kbm-sesi').value,
+        tanggal: today(),
+        materi: document.getElementById('kbm-materi').value.trim(),
+        catatan: document.getElementById('kbm-catatan').value.trim(),
+        kehadiran: { status: 'hadir' },
+        absensi: []
+      };
+
+      try {
+        var r = await apiCall('simpanKBM', payload);
+        if (r && r.success) {
+          setStatus(kbmStatus, 'ok', 'KBM tersimpan.');
+          formKbm.reset();
+        } else {
+          setStatus(kbmStatus, 'err', (r && r.message) || 'Gagal menyimpan KBM.');
+        }
+      } catch (err) {
+        setStatus(kbmStatus, 'err', 'Tidak dapat terhubung ke server.');
+        console.error(err);
+      } finally {
+        kbmBtn.disabled = false;
+      }
+    });
+
+    // ---------- Input Nilai ----------
+    var nilaiStatus = document.getElementById('nilai-status');
+    var santriList = document.getElementById('santri-list');
+    var btnMuat = document.getElementById('btn-muat-santri');
+    var btnSimpan = document.getElementById('btn-simpan-nilai');
+
+    function normalizeSantri(data) {
+      var arr = Array.isArray(data) ? data
+              : (data && (data.santri || data.data || data.list)) || [];
+      return arr.map(function (s) {
+        return {
+          strId: s.strId || s.id || s.STR_ID || s.strID || '',
+          nama: s.nama || s.name || s.namaSantri || s.NAMA || '(tanpa nama)'
+        };
+      });
+    }
+
+    btnMuat.addEventListener('click', async function () {
+      var kelasId = document.getElementById('nilai-kelas').value;
+      btnMuat.disabled = true;
+      santriList.innerHTML = '';
+      btnSimpan.hidden = true;
+      setStatus(nilaiStatus, 'info', 'Memuat santri...');
+
+      try {
+        var r = await apiCall('getSantriPerKelas', { kelasId: kelasId });
+        console.log('getSantriPerKelas ->', r);
+        if (!r || !r.success) {
+          setStatus(nilaiStatus, 'err', (r && r.message) || 'Gagal memuat santri.');
+          return;
+        }
+        var santri = normalizeSantri(r.data);
+        if (!santri.length) {
+          setStatus(nilaiStatus, 'info', 'Tidak ada santri pada kelas ini.');
+          return;
+        }
+        santri.forEach(function (s) {
+          var row = document.createElement('div');
+          row.className = 'santri-row';
+          row.dataset.strId = s.strId;
+          row.dataset.nama = s.nama;
+
+          var nama = document.createElement('span');
+          nama.className = 'nama';
+          nama.textContent = s.nama;
+
+          var inp = document.createElement('input');
+          inp.type = 'number';
+          inp.min = '0';
+          inp.max = '100';
+          inp.step = '1';
+          inp.setAttribute('aria-label', 'Nilai ' + s.nama);
+
+          row.appendChild(nama);
+          row.appendChild(inp);
+          santriList.appendChild(row);
+        });
+        nilaiStatus.hidden = true;
+        btnSimpan.hidden = false;
+      } catch (err) {
+        setStatus(nilaiStatus, 'err', 'Tidak dapat terhubung ke server.');
+        console.error(err);
+      } finally {
+        btnMuat.disabled = false;
+      }
+    });
+
+    btnSimpan.addEventListener('click', async function () {
+      var rows = santriList.querySelectorAll('.santri-row');
+      var nilai = [];
+      rows.forEach(function (row) {
+        var val = row.querySelector('input').value;
+        if (val !== '') {
+          nilai.push({
+            strId: row.dataset.strId,
+            nama: row.dataset.nama,
+            nilai: Number(val)
+          });
+        }
+      });
+
+      if (!nilai.length) {
+        setStatus(nilaiStatus, 'err', 'Belum ada nilai yang diisi.');
+        return;
+      }
+
+      var payload = {
+        kelasId: document.getElementById('nilai-kelas').value,
+        mapelId: document.getElementById('nilai-mapel').value.trim(),
+        semester: document.getElementById('nilai-semester').value,
+        jenis: document.getElementById('nilai-jenis').value.trim(),
+        nomorUlangan: Number(document.getElementById('nilai-nomor').value || 1),
+        keterangan: document.getElementById('nilai-ket').value.trim(),
+        nilai: nilai
+      };
+
+      btnSimpan.disabled = true;
+      setStatus(nilaiStatus, 'info', 'Menyimpan ' + nilai.length + ' nilai...');
+
+      try {
+        var r = await apiCall('simpanNilai', payload);
+        if (r && r.success) {
+          setStatus(nilaiStatus, 'ok', 'Nilai tersimpan (' + nilai.length + ' santri).');
+        } else {
+          setStatus(nilaiStatus, 'err', (r && r.message) || 'Gagal menyimpan nilai.');
+        }
+      } catch (err) {
+        setStatus(nilaiStatus, 'err', 'Tidak dapat terhubung ke server.');
+        console.error(err);
+      } finally {
+        btnSimpan.disabled = false;
+      }
+    });
+  })();
+  </script>
+</body>
+</html>

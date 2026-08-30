@@ -1,9 +1,23 @@
-/* SIMKUR MA'HAD - Login page logic (tahap 1)
- * Redirect ke dashboard per-role dikerjakan di tahap berikutnya.
+/* SIMKUR MA'HAD - Login page logic (tahap 2)
+ * Sukses login -> simpan sesi -> redirect ke dashboard sesuai role.
  */
+
+const DASHBOARD_BY_ROLE = {
+  admin: 'pages/dashboard-admin.html',
+  guru: 'pages/dashboard-guru.html',
+  ortu: 'pages/dashboard-ortu.html'
+};
 
 (function () {
   'use strict';
+
+  // Sudah login? Langsung ke dashboard sesuai role.
+  const existingToken = localStorage.getItem('token');
+  const existingRole = (localStorage.getItem('role') || '').toLowerCase();
+  if (existingToken && DASHBOARD_BY_ROLE[existingRole]) {
+    window.location.replace(appRoot() + DASHBOARD_BY_ROLE[existingRole]);
+    return;
+  }
 
   const form = document.getElementById('login-form');
   const usernameInput = document.getElementById('username');
@@ -60,14 +74,20 @@
       // Konvensi response GAS: { success: true, token, role, nama }
       //                        atau { success: false, message }
       if (result && result.success) {
-        localStorage.setItem('simkur.auth', JSON.stringify({
-          token: result.token,
-          role: result.role,
-          nama: result.nama
-        }));
+        const role = String(result.role || '').toLowerCase();
 
-        // Sementara: belum ada redirect ke dashboard.
-        alert('Login berhasil, role: ' + result.role);
+        localStorage.setItem('token', result.token || '');
+        localStorage.setItem('role', role);
+        localStorage.setItem('nama', result.nama || '');
+
+        const target = DASHBOARD_BY_ROLE[role];
+        if (target) {
+          window.location.href = appRoot() + target;
+        } else {
+          showError('Role tidak dikenali: ' + result.role);
+          setLoading(false);
+        }
+        return;
       } else {
         showError(
           (result && result.message) ||

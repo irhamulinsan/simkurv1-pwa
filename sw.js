@@ -1,16 +1,24 @@
-/* SIMKUR MA'HAD - Service Worker (tahap 1)
+/* SIMKUR MA'HAD - Service Worker (tahap 2)
  * Minimal: cache app shell dengan strategi cache-first untuk asset statis.
  * Push notification BELUM diimplementasikan (tahap berikutnya).
+ *
+ * Path RELATIF (tanpa "/" di depan) supaya tetap benar saat di-host di
+ * subfolder GitHub Pages (mis. /simkurv1-pwa/). Naikkan versi CACHE_NAME
+ * setiap kali isi APP_SHELL berubah.
  */
 
-const CACHE_NAME = 'simkur-shell-v1';
+const CACHE_NAME = 'simkur-shell-v2';
 
 const APP_SHELL = [
-  '/index.html',
-  '/css/style.css',
-  '/js/app.js',
-  '/js/api.js',
-  '/manifest.json'
+  'index.html',
+  'manifest.json',
+  'css/style.css',
+  'js/app.js',
+  'js/api.js',
+  'js/guard.js',
+  'pages/dashboard-admin.html',
+  'pages/dashboard-guru.html',
+  'pages/dashboard-ortu.html'
 ];
 
 // Install: pre-cache app shell
