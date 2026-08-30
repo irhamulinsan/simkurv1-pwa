@@ -7,15 +7,17 @@
  * setiap kali isi APP_SHELL berubah.
  */
 
-const CACHE_NAME = 'simkur-shell-v4';
+const CACHE_NAME = 'simkur-shell-v5';
 
 const APP_SHELL = [
   'index.html',
   'manifest.json',
+  'css/tokens.css',
   'css/style.css',
   'js/app.js',
   'js/api.js',
   'js/ui.js',
+  'js/nav.js',
   'js/guard.js',
   'pages/dashboard-admin.html',
   'pages/dashboard-guru.html',

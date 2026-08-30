@@ -7,19 +7,42 @@
   <title>Nilai Anak &middot; SIMKUR MA'HAD</title>
   <link rel="manifest" href="../manifest.json">
   <link rel="icon" href="../icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/tokens.css">
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-  <header class="app-header">
-    <div class="who">
-      <strong id="nama-ortu">&nbsp;</strong>
+  <header class="topbar">
+    <div class="brand-logo" aria-hidden="true"><span>MA</span></div>
+    <div class="tb-who">
+      <strong id="nama-ortu" class="js-nama">&nbsp;</strong>
       <span>Orang Tua / Wali</span>
     </div>
-    <button type="button" class="btn-logout" id="btn-logout">Keluar</button>
+    <button type="button" class="btn-logout" id="btn-logout-top" data-logout>Keluar</button>
   </header>
 
-  <main class="app">
-    <section class="card">
+  <div class="app">
+    <aside class="side">
+      <div class="side-brand">
+        <div class="brand-logo" aria-hidden="true"><span>MA</span></div>
+        <div class="brand-name">SIMKUR MA'HAD</div>
+        <div class="brand-sub js-nama">&nbsp;</div>
+      </div>
+      <nav class="side-nav">
+        <a class="snav" data-sec="sec-nilai" href="#sec-nilai"><span class="ic">📖</span> Nilai Anak</a>
+        <a class="snav" data-sec="sec-raport" href="#sec-raport"><span class="ic">📋</span> Raport</a>
+        <a class="snav" data-sec="sec-kehadiran" href="#sec-kehadiran"><span class="ic">✅</span> Kehadiran</a>
+        <a class="snav" data-sec="sec-info" href="#sec-info"><span class="ic">ℹ️</span> Info Tambahan</a>
+      </nav>
+      <div class="side-foot">
+        <button type="button" class="btn-logout" id="btn-logout" data-logout>Keluar</button>
+      </div>
+    </aside>
+
+    <main class="main">
+    <section class="card" id="sec-nilai">
       <h2>Nilai Anak</h2>
       <p class="status-msg info" id="nilai-status">Memuat...</p>
       <div id="nilai-body"></div>
@@ -30,7 +53,7 @@
     </section>
 
     <!-- ============ RAPORT ============ -->
-    <section class="card">
+    <section class="card" id="sec-raport">
       <h2>Raport</h2>
       <div class="field">
         <label for="rap-semester">Semester</label>
@@ -45,7 +68,7 @@
     </section>
 
     <!-- ============ KEHADIRAN ============ -->
-    <section class="card">
+    <section class="card" id="sec-kehadiran">
       <h2>Kehadiran</h2>
       <div id="rap-kehadiran">
         <p class="status-msg info">Tekan &ldquo;Lihat Raport&rdquo; dulu.</p>
@@ -53,17 +76,26 @@
     </section>
 
     <!-- ============ INFO TAMBAHAN ============ -->
-    <section class="card">
+    <section class="card" id="sec-info">
       <h2>Info Tambahan</h2>
       <div id="rap-tambahan">
         <p class="status-msg info">Tekan &ldquo;Lihat Raport&rdquo; dulu.</p>
       </div>
     </section>
-  </main>
+    </main>
+  </div>
+
+  <nav class="bottomnav">
+    <a class="bnv" data-sec="sec-nilai" href="#sec-nilai"><span class="ic">📖</span>Nilai</a>
+    <a class="bnv" data-sec="sec-raport" href="#sec-raport"><span class="ic">📋</span>Raport</a>
+    <a class="bnv" data-sec="sec-kehadiran" href="#sec-kehadiran"><span class="ic">✅</span>Hadir</a>
+    <a class="bnv" data-sec="sec-info" href="#sec-info"><span class="ic">ℹ️</span>Info</a>
+  </nav>
 
   <script src="../js/api.js"></script>
   <script src="../js/ui.js"></script>
   <script src="../js/guard.js"></script>
+  <script src="../js/nav.js"></script>
   <script>
   (function () {
     'use strict';

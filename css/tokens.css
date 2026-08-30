@@ -1,0 +1,30 @@
+:root{
+  --p:#10b981;--p2:#059669;--pd:#047857;--pl:#d1fae5;--pxl:#ecfdf5;
+  --brand:#f18518;--brand2:#d9720a;--brandd:#b85f00;--brandl:#ffe4c2;--brandxl:#fff4e6;--brandk:#2b2b2b;
+  --b:#3b82f6;--bl:#dbeafe;--bxl:#eff6ff;
+  --y:#f59e0b;--yl:#fef3c7;--yxl:#fffbeb;
+  --r:#ef4444;--rl:#fee2e2;--rxl:#fef2f2;
+  --n1:#0f172a;--n2:#1e293b;--n3:#475569;--n4:#64748b;--n5:#94a3b8;--n6:#cbd5e1;--n7:#e2e8f0;--n8:#f1f5f9;--n9:#f8fafc;--nw:#fff;
+  --r10:10px;--r14:14px;--r18:18px;--r22:22px;
+  --sh1:0 1px 3px rgba(15,23,42,.06);--sh2:0 4px 12px rgba(15,23,42,.08);--sh3:0 8px 24px rgba(15,23,42,.1);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;font-family:'Plus Jakarta Sans',-apple-system,system-ui,sans-serif;background:#f5f7fb;color:var(--n1);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
+a{color:inherit;text-decoration:none}
+.app{display:flex;min-height:100vh}
+.side{width:240px;background:#fff;border-right:1px solid var(--n7);display:flex;flex-direction:column;padding:24px 16px;position:sticky;top:0;height:100vh;flex-shrink:0}
+.main{flex:1;padding:24px 32px 40px;overflow-x:hidden;min-width:0}
+.brand-logo{width:72px;height:72px;background:#fff;border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 6px 20px rgba(241,133,24,.3);border:2px solid var(--brandl);overflow:hidden}
+.snav{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;font-weight:600;font-size:14px;color:var(--n3);width:100%}
+.snav.on{background:linear-gradient(135deg,var(--brand) 0%,var(--brand2) 100%);color:#fff;box-shadow:0 4px 12px rgba(241,133,24,.35)}
+.topbar{display:none;position:sticky;top:0;background:#fff;border-bottom:1px solid var(--n7);padding:12px 16px;align-items:center;justify-content:space-between}
+.bottomnav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--n7);padding:6px 0 max(6px,env(safe-area-inset-bottom));justify-content:space-around}
+.bnv{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 10px;color:var(--n4);font-size:10px;font-weight:600;min-width:60px;border-radius:10px}
+.bnv.on{color:var(--p)}
+@media(max-width:1023px){
+  .side{display:none}
+  .topbar{display:flex}
+  .bottomnav{display:flex}
+  .main{padding:16px 16px 90px}
+}

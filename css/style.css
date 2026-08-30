@@ -1,54 +1,38 @@
-/* SIMKUR MA'HAD - Login styles
- * Mobile-first, high-contrast (dipakai outdoor di lingkungan pesantren).
- * Aksen utama: #f18518
+/* SIMKUR MA'HAD - override per-halaman
+ * Dasar (warna, font, layout shell) ada di css/tokens.css.
+ * File ini hanya menambah gaya khusus login + komponen dashboard.
+ * Semua nilai aksen/radius menunjuk ke token, jangan hardcode #f18518.
  */
 
 :root {
-  --accent: #f18518;
-  --accent-dark: #c96a0c;
-  --accent-darker: #a8560a;
+  /* alias supaya kode lama tetap jalan, tapi sumbernya token resmi */
+  --accent: var(--brand);
+  --accent-dark: var(--brand2);
+  --accent-darker: var(--brandd);
+  --accent-ring: var(--brandl);
 
-  --ink: #1f2430;          /* teks utama, kontras tinggi vs putih */
-  --ink-soft: #4a5160;
-  --line: #d9dde5;
+  --ink: var(--n1);
+  --ink-soft: var(--n4);
+  --line: var(--n7);
 
-  --bg: #ffffff;
-  --surface: #ffffff;
-  --field-bg: #ffffff;
+  --bg: var(--nw);
+  --surface: var(--nw);
+  --field-bg: var(--nw);
 
   --error-bg: #fde8e8;
   --error-ink: #9b1c1c;
   --error-line: #f4b4b4;
 
-  --radius: 12px;
-  --radius-sm: 9px;
+  --radius: var(--r14);
+  --radius-sm: var(--r10);
   --tap: 48px;            /* > 44px minimum */
-  --shadow: 0 10px 30px rgba(31, 36, 48, 0.10);
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html, body {
-  margin: 0;
-  padding: 0;
+  --shadow: var(--sh2);
 }
 
 body {
   min-height: 100vh;
   min-height: 100dvh;
-  background-color: var(--bg);
-  /* motif islami halus: garis geometris tipis, tidak norak */
-  background-image:
-    radial-gradient(circle at 100% 0%, rgba(241, 133, 24, 0.10), transparent 42%),
-    radial-gradient(circle at 0% 100%, rgba(241, 133, 24, 0.07), transparent 40%);
-  background-attachment: fixed;
   color: var(--ink);
-  font-family: "Segoe UI", Roboto, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
 }
 
 .auth {
@@ -77,20 +61,12 @@ body {
   margin-bottom: 22px;
 }
 
-.brand-logo {
-  width: 76px;
-  height: 76px;
-  margin: 0 auto 14px;
-  border-radius: 16px;
-  background: var(--accent);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 26px;
+/* .brand-logo container: lihat css/tokens.css. Di sini hanya isi teks placeholder. */
+.brand-logo span {
+  font-weight: 800;
+  font-size: 24px;
   letter-spacing: 1px;
-  box-shadow: 0 6px 16px rgba(241, 133, 24, 0.35);
+  color: var(--brand);
 }
 
 .brand-name {
@@ -152,7 +128,7 @@ input[type="text"]:focus,
 input[type="password"]:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(241, 133, 24, 0.25);
+  box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
 .input-group {
@@ -242,65 +218,135 @@ input[type="password"]:focus {
 }
 
 /* =========================================================
-   DASHBOARD (tahap 2)
+   SHELL: sidebar / topbar / bottomnav
+   (layout dasar .app/.side/.main/.topbar/.bottomnav ada di tokens.css)
    ========================================================= */
 
-.app {
-  max-width: 560px;
-  margin: 0 auto;
-  padding: 0 14px calc(28px + env(safe-area-inset-bottom));
+.main {
+  max-width: 960px;
 }
 
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
+/* --- sidebar --- */
+.side-brand {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.side-brand .brand-name {
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.side-brand .brand-sub {
+  font-size: 12px;
+}
+
+.side-nav {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 0 -14px 16px;
-  padding: 12px 14px calc(12px + env(safe-area-inset-top));
-  padding-top: 14px;
-  background: var(--accent);
-  color: #fff;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.app-header .who {
+.side-foot {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--n8);
+}
+
+.snav {
+  cursor: pointer;
+}
+
+.snav:hover:not(.on) {
+  background: var(--n9);
+  color: var(--n1);
+}
+
+.snav .ic {
+  font-size: 17px;
+  line-height: 1;
+  width: 20px;
+  text-align: center;
+}
+
+/* --- topbar (HP) --- */
+.topbar {
+  z-index: 20;
+}
+
+.topbar .tb-who {
   min-width: 0;
 }
 
-.app-header .who strong {
+.topbar .tb-who strong {
   display: block;
-  font-size: 15.5px;
+  font-size: 14px;
+  font-weight: 700;
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.app-header .who span {
-  font-size: 12px;
-  opacity: 0.9;
+.topbar .tb-who span {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--n4);
   text-transform: capitalize;
 }
 
+.topbar .brand-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  margin: 0;
+  box-shadow: none;
+}
+
+.topbar .brand-logo span {
+  font-size: 13px;
+}
+
+/* --- bottomnav (HP) --- */
+.bottomnav {
+  z-index: 20;
+}
+
+.bnv .ic {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.bnv:active {
+  background: var(--n9);
+}
+
+/* --- tombol keluar (dipakai di sidebar & topbar, bg terang) --- */
 .btn-logout {
   flex: 0 0 auto;
   min-height: 40px;
   padding: 8px 14px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.65);
+  color: var(--brand);
+  background: var(--brandxl);
+  border: 1px solid var(--brandl);
   border-radius: var(--radius-sm);
   cursor: pointer;
 }
 
 .btn-logout:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: var(--brandl);
 }
+
+.side-foot .btn-logout {
+  width: 100%;
+  min-height: 44px;
+}
+
+/* =========================================================
+   KARTU & KOMPONEN SECTION
+   ========================================================= */
 
 .card {
   background: var(--surface);
@@ -365,7 +411,7 @@ textarea:focus,
 input[type="number"]:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(241, 133, 24, 0.25);
+  box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
 .btn-block {
@@ -417,9 +463,9 @@ input[type="number"]:focus {
   padding: 10px 12px;
   border-radius: var(--radius-sm);
 }
-.status-msg.ok  { background: #e6f4ea; color: #1e6b34; border: 1px solid #b7dfc3; }
+.status-msg.ok  { background: var(--pxl); color: var(--pd); border: 1px solid var(--pl); }
 .status-msg.err { background: var(--error-bg); color: var(--error-ink); border: 1px solid var(--error-line); }
-.status-msg.info { background: #eef1f6; color: var(--ink-soft); border: 1px solid var(--line); }
+.status-msg.info { background: var(--n9); color: var(--ink-soft); border: 1px solid var(--line); }
 
 /* tabel sederhana */
 .table-wrap {
@@ -442,7 +488,7 @@ table.simple td {
 }
 
 table.simple th {
-  background: #faf3ec;
+  background: var(--brandxl);
   color: var(--ink);
   font-weight: 700;
 }

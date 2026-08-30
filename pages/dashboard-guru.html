@@ -7,20 +7,44 @@
   <title>Dashboard Guru &middot; SIMKUR MA'HAD</title>
   <link rel="manifest" href="../manifest.json">
   <link rel="icon" href="../icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/tokens.css">
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-  <header class="app-header">
-    <div class="who">
-      <strong id="nama-guru">&nbsp;</strong>
+  <header class="topbar">
+    <div class="brand-logo" aria-hidden="true"><span>MA</span></div>
+    <div class="tb-who">
+      <strong id="nama-guru" class="js-nama">&nbsp;</strong>
       <span>Guru</span>
     </div>
-    <button type="button" class="btn-logout" id="btn-logout">Keluar</button>
+    <button type="button" class="btn-logout" id="btn-logout-top" data-logout>Keluar</button>
   </header>
 
-  <main class="app">
+  <div class="app">
+    <aside class="side">
+      <div class="side-brand">
+        <div class="brand-logo" aria-hidden="true"><span>MA</span></div>
+        <div class="brand-name">SIMKUR MA'HAD</div>
+        <div class="brand-sub js-nama">&nbsp;</div>
+      </div>
+      <nav class="side-nav">
+        <a class="snav" data-sec="sec-kbm" href="#sec-kbm"><span class="ic">📝</span> Input KBM</a>
+        <a class="snav" data-sec="sec-nilai" href="#sec-nilai"><span class="ic">💯</span> Input Nilai</a>
+        <a class="snav" data-sec="sec-jadwal" href="#sec-jadwal"><span class="ic">🗓️</span> Jadwal Saya</a>
+        <a class="snav" data-sec="sec-rkbm" href="#sec-rkbm"><span class="ic">📚</span> Riwayat KBM</a>
+        <a class="snav" data-sec="sec-rabs" href="#sec-rabs"><span class="ic">🙋</span> Riwayat Absensi</a>
+      </nav>
+      <div class="side-foot">
+        <button type="button" class="btn-logout" id="btn-logout" data-logout>Keluar</button>
+      </div>
+    </aside>
+
+    <main class="main">
     <!-- ============ INPUT KBM & ABSENSI ============ -->
-    <section class="card">
+    <section class="card" id="sec-kbm">
       <h2>Input KBM &amp; Absensi</h2>
 
       <form id="form-kbm">
@@ -52,7 +76,7 @@
     </section>
 
     <!-- ============ INPUT NILAI ============ -->
-    <section class="card">
+    <section class="card" id="sec-nilai">
       <h2>
         Input Nilai
         <span class="hint">Pilih kelas lalu muat daftar santri.</span>
@@ -116,11 +140,21 @@
       <p class="status-msg info" id="rabs-status" hidden></p>
       <div id="rabs-table"></div>
     </details>
-  </main>
+    </main>
+  </div>
+
+  <nav class="bottomnav">
+    <a class="bnv" data-sec="sec-kbm" href="#sec-kbm"><span class="ic">📝</span>KBM</a>
+    <a class="bnv" data-sec="sec-nilai" href="#sec-nilai"><span class="ic">💯</span>Nilai</a>
+    <a class="bnv" data-sec="sec-jadwal" href="#sec-jadwal"><span class="ic">🗓️</span>Jadwal</a>
+    <a class="bnv" data-sec="sec-rkbm" href="#sec-rkbm"><span class="ic">📚</span>Riwayat</a>
+    <a class="bnv" data-sec="sec-rabs" href="#sec-rabs"><span class="ic">🙋</span>Absen</a>
+  </nav>
 
   <script src="../js/api.js"></script>
   <script src="../js/ui.js"></script>
   <script src="../js/guard.js"></script>
+  <script src="../js/nav.js"></script>
   <script>
   (function () {
     'use strict';
