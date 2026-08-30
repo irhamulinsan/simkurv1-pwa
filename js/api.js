@@ -6,7 +6,7 @@
  * URL Web App Google Apps Script hasil deploy.
  * Isi manual, contoh: "https://script.google.com/macros/s/AKfycb.../exec"
  */
-const GAS_EXEC_URL = "";
+const GAS_EXEC_URL = "https://script.google.com/macros/s/AKfycbzq-XjBF4qywmTaNZhn_fS5nAFrcH8SdsanBo33ojnCszdgUmx7oiejnFBXUHqyRENE/exec";
 
 /**
  * Kirim permintaan login ke backend.
