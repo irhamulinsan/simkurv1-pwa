@@ -28,9 +28,41 @@
         <pre id="nilai-raw"></pre>
       </details>
     </section>
+
+    <!-- ============ RAPORT ============ -->
+    <section class="card">
+      <h2>Raport</h2>
+      <div class="field">
+        <label for="rap-semester">Semester</label>
+        <select id="rap-semester">
+          <option value="1">Semester 1</option>
+          <option value="2">Semester 2</option>
+        </select>
+      </div>
+      <button type="button" class="btn-block" id="btn-raport">Lihat Raport</button>
+      <p class="status-msg info" id="rap-status" hidden></p>
+      <div id="rap-table"></div>
+    </section>
+
+    <!-- ============ KEHADIRAN ============ -->
+    <section class="card">
+      <h2>Kehadiran</h2>
+      <div id="rap-kehadiran">
+        <p class="status-msg info">Tekan &ldquo;Lihat Raport&rdquo; dulu.</p>
+      </div>
+    </section>
+
+    <!-- ============ INFO TAMBAHAN ============ -->
+    <section class="card">
+      <h2>Info Tambahan</h2>
+      <div id="rap-tambahan">
+        <p class="status-msg info">Tekan &ldquo;Lihat Raport&rdquo; dulu.</p>
+      </div>
+    </section>
   </main>
 
   <script src="../js/api.js"></script>
+  <script src="../js/ui.js"></script>
   <script src="../js/guard.js"></script>
   <script>
   (function () {
@@ -109,6 +141,86 @@
         console.error(err);
       }
     })();
+
+    // ---------- Raport + Kehadiran + Info Tambahan (satu response) ----------
+    var rapSem = document.getElementById('rap-semester');
+    var rapStatus = document.getElementById('rap-status');
+    var rapTable = document.getElementById('rap-table');
+    var rapKehadiran = document.getElementById('rap-kehadiran');
+    var rapTambahan = document.getElementById('rap-tambahan');
+    var btnRaport = document.getElementById('btn-raport');
+
+    function rapMsg(kind, msg) {
+      rapStatus.className = 'status-msg ' + kind;
+      rapStatus.textContent = msg;
+      rapStatus.hidden = false;
+    }
+
+    btnRaport.addEventListener('click', async function () {
+      btnRaport.disabled = true;
+      rapMsg('info', 'Memuat raport...');
+      try {
+        var r = await apiCall('getRaportAnak', { semester: rapSem.value });
+        console.log('getRaportAnak ->', r);
+        if (!r || !r.success) {
+          rapMsg('err', (r && r.message) || 'Gagal memuat raport.');
+          return;
+        }
+        rapStatus.hidden = true;
+        var data = r.data || {};
+
+        // --- Tabel nilai: Mapel | B1 | B2 | B3 | UAS | Nilai Akhir ---
+        var nilaiRows = firstArray(data, ['nilai', 'mapel', 'raport', 'list', 'rows']);
+        buildTable(rapTable, [
+          { label: 'Mapel', get: function (x) { return pick(x, ['mapel', 'namaMapel', 'mapelNama', 'name', 'mataPelajaran']); } },
+          { label: 'B1', get: function (x) { return pick(x, ['b1', 'B1', 'bulan1']); } },
+          { label: 'B2', get: function (x) { return pick(x, ['b2', 'B2', 'bulan2']); } },
+          { label: 'B3', get: function (x) { return pick(x, ['b3', 'B3', 'bulan3']); } },
+          { label: 'UAS', get: function (x) { return pick(x, ['uas', 'UAS']); } },
+          { label: 'Nilai Akhir', get: function (x) { return pick(x, ['nilaiAkhir', 'nilai_akhir', 'na', 'NA', 'akhir']); } }
+        ], nilaiRows, 'Belum ada nilai untuk semester ini.');
+
+        // --- Kehadiran (field kehadiran dari response yang sama) ---
+        var keh = data.kehadiran || data.absensi || null;
+        if (keh && typeof keh === 'object') {
+          rapKehadiran.innerHTML =
+            kehRow('Sakit', pick(keh, ['sakit', 's', 'S'])) +
+            kehRow('Izin', pick(keh, ['izin', 'i', 'I'])) +
+            kehRow('Tanpa Keterangan', pick(keh, ['tanpaKeterangan', 'tanpa_keterangan', 'alpha', 'alfa', 'a', 'A', 'tk']));
+        } else {
+          sectionMsg(rapKehadiran, 'info', 'Belum ada data.');
+        }
+
+        // --- Info tambahan (field tambahan dari response yang sama) ---
+        var tmb = data.tambahan || data.info || data.dataTambahan || null;
+        if (tmb && typeof tmb === 'object') {
+          rapTambahan.innerHTML = [
+            ['Catatan', pick(tmb, ['catatan', 'notes'])],
+            ['Ekskul', pick(tmb, ['ekskul', 'ekstrakurikuler'])],
+            ['Hafalan', pick(tmb, ['hafalan', 'tahfidz'])],
+            ['Literasi', pick(tmb, ['literasi'])]
+          ].map(function (f) {
+            var val = (f[1] === '' || f[1] == null)
+              ? '<span class="muted">Belum ada data</span>'
+              : esc(f[1]);
+            return '<div class="nilai-item"><span class="mapel">' + f[0] +
+                   '</span><span>' + val + '</span></div>';
+          }).join('');
+        } else {
+          sectionMsg(rapTambahan, 'info', 'Belum ada data.');
+        }
+      } catch (err) {
+        rapMsg('err', 'Tidak dapat terhubung ke server.');
+        console.error(err);
+      } finally {
+        btnRaport.disabled = false;
+      }
+    });
+
+    function kehRow(label, val) {
+      return '<div class="nilai-item"><span class="mapel">' + label +
+             '</span><span class="angka">' + esc(val === '' ? 0 : val) + '</span></div>';
+    }
   })();
   </script>
 </body>

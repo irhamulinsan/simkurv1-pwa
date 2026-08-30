@@ -95,9 +95,31 @@
 
       <button type="button" class="btn-block" id="btn-simpan-nilai" hidden>Simpan Semua</button>
     </section>
+
+    <!-- ============ JADWAL SAYA (collapsible) ============ -->
+    <details class="card" id="sec-jadwal">
+      <summary>Jadwal Saya</summary>
+      <p class="status-msg info" id="jadwal-status" hidden></p>
+      <div id="jadwal-table"></div>
+    </details>
+
+    <!-- ============ RIWAYAT KBM (collapsible) ============ -->
+    <details class="card" id="sec-rkbm">
+      <summary>Riwayat KBM</summary>
+      <p class="status-msg info" id="rkbm-status" hidden></p>
+      <div id="rkbm-table"></div>
+    </details>
+
+    <!-- ============ RIWAYAT ABSENSI SAYA (collapsible) ============ -->
+    <details class="card" id="sec-rabs">
+      <summary>Riwayat Absensi Saya</summary>
+      <p class="status-msg info" id="rabs-status" hidden></p>
+      <div id="rabs-table"></div>
+    </details>
   </main>
 
   <script src="../js/api.js"></script>
+  <script src="../js/ui.js"></script>
   <script src="../js/guard.js"></script>
   <script>
   (function () {
@@ -295,6 +317,93 @@
       } finally {
         btnSimpan.disabled = false;
       }
+    });
+
+    // ---------- Section read-only: Jadwal / Riwayat KBM / Riwayat Absensi ----------
+    function loadSection(opts) {
+      var statusEl = opts.status;
+      statusEl.className = 'status-msg info';
+      statusEl.textContent = 'Memuat...';
+      statusEl.hidden = false;
+      opts.table.innerHTML = '';
+
+      apiCall(opts.action, opts.params || {}).then(function (r) {
+        console.log(opts.action, '->', r);
+        if (!r || !r.success) {
+          statusEl.className = 'status-msg err';
+          statusEl.textContent = (r && r.message) || 'Gagal memuat data.';
+          return;
+        }
+        var rows = firstArray(r.data, ['data', 'list', 'rows', 'jadwal', 'riwayat', 'kbm', 'absensi']);
+        if (opts.sortDescBy) {
+          rows = rows.slice().sort(function (a, b) {
+            return String(opts.sortDescBy(b)).localeCompare(String(opts.sortDescBy(a)));
+          });
+        }
+        statusEl.hidden = true;
+        buildTable(opts.table, opts.columns, rows, opts.empty);
+      }).catch(function (err) {
+        statusEl.className = 'status-msg err';
+        statusEl.textContent = 'Tidak dapat terhubung ke server.';
+        console.error(err);
+      });
+    }
+
+    var loadedSections = {};
+    function loadOnce(id, opts) {
+      if (loadedSections[id]) return;
+      loadedSections[id] = true;
+      loadSection(opts);
+    }
+
+    var jadwalOpts = {
+      action: 'getJadwalGuru',
+      status: document.getElementById('jadwal-status'),
+      table: document.getElementById('jadwal-table'),
+      empty: 'Belum ada jadwal.',
+      columns: [
+        { label: 'Hari', get: function (x) { return pick(x, ['hari', 'day', 'Hari']); } },
+        { label: 'Sesi', get: function (x) { return pick(x, ['sesi', 'jam', 'Sesi']); } },
+        { label: 'Mapel', get: function (x) { return pick(x, ['mapel', 'namaMapel', 'Mapel', 'mataPelajaran']); } },
+        { label: 'Kelas', get: function (x) { return pick(x, ['kelas', 'namaKelas', 'Kelas', 'kelasId']); } }
+      ]
+    };
+    var rkbmOpts = {
+      action: 'getRiwayatKBMGuru',
+      status: document.getElementById('rkbm-status'),
+      table: document.getElementById('rkbm-table'),
+      empty: 'Belum ada riwayat KBM.',
+      sortDescBy: function (x) { return pick(x, ['tanggal', 'tgl', 'date', 'Tanggal']); },
+      columns: [
+        { label: 'Tanggal', get: function (x) { return fmtDate(pick(x, ['tanggal', 'tgl', 'date', 'Tanggal'])); } },
+        { label: 'Kelas', get: function (x) { return pick(x, ['kelas', 'namaKelas', 'Kelas', 'kelasId']); } },
+        { label: 'Mapel', get: function (x) { return pick(x, ['mapel', 'namaMapel', 'Mapel', 'mataPelajaran']); } },
+        { label: 'Materi', get: function (x) { return pick(x, ['materi', 'Materi']); } },
+        { label: 'Status', get: function (x) { return pick(x, ['status', 'Status', 'kehadiran']); } }
+      ]
+    };
+    var rabsOpts = {
+      action: 'getRiwayatAbsensiGuru',
+      status: document.getElementById('rabs-status'),
+      table: document.getElementById('rabs-table'),
+      empty: 'Belum ada riwayat absensi.',
+      sortDescBy: function (x) { return pick(x, ['tanggal', 'tgl', 'date', 'Tanggal']); },
+      columns: [
+        { label: 'Tanggal', get: function (x) { return fmtDate(pick(x, ['tanggal', 'tgl', 'date', 'Tanggal'])); } },
+        { label: 'Status', get: function (x) { return pick(x, ['status', 'Status']); } },
+        { label: 'Alasan', get: function (x) { return pick(x, ['alasan', 'keterangan', 'ket', 'Alasan']); } }
+      ]
+    };
+
+    // Muat saat section pertama kali dibuka (hemat request di HP).
+    document.getElementById('sec-jadwal').addEventListener('toggle', function () {
+      if (this.open) loadOnce('jadwal', jadwalOpts);
+    });
+    document.getElementById('sec-rkbm').addEventListener('toggle', function () {
+      if (this.open) loadOnce('rkbm', rkbmOpts);
+    });
+    document.getElementById('sec-rabs').addEventListener('toggle', function () {
+      if (this.open) loadOnce('rabs', rabsOpts);
     });
   })();
   </script>

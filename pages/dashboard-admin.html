@@ -46,9 +46,57 @@
       <p class="status-msg info" id="status-nilai-msg" hidden></p>
       <div class="table-wrap" id="status-nilai-table"></div>
     </section>
+
+    <!-- ============ KELOLA AKUN ============ -->
+    <section class="card">
+      <h2>Kelola Akun</h2>
+
+      <form id="form-user">
+        <div class="form-grid">
+          <div class="field">
+            <label for="u-username">Username</label>
+            <input type="text" id="u-username" autocomplete="off" autocapitalize="none" required>
+          </div>
+          <div class="field">
+            <label for="u-password">Password</label>
+            <input type="text" id="u-password" autocomplete="off" required>
+          </div>
+          <div class="field">
+            <label for="u-role">Role</label>
+            <select id="u-role">
+              <option value="admin">admin</option>
+              <option value="guru">guru</option>
+              <option value="ortu">ortu</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="u-nama">Nama</label>
+            <input type="text" id="u-nama" autocomplete="off" required>
+          </div>
+          <div class="field full">
+            <label for="u-refid">refId <span class="hint">(kosongkan kalau role admin)</span></label>
+            <input type="text" id="u-refid" autocomplete="off">
+          </div>
+        </div>
+        <button type="submit" class="btn-block" id="u-submit">Tambah User</button>
+        <p class="status-msg info" id="u-status" hidden></p>
+      </form>
+
+      <p class="subhead">Daftar User</p>
+      <p class="status-msg info" id="users-status" hidden></p>
+      <div id="users-table"></div>
+    </section>
+
+    <!-- ============ REKAP DISIPLIN GURU ============ -->
+    <section class="card">
+      <h2>Rekap Disiplin Guru</h2>
+      <p class="status-msg info" id="disiplin-status" hidden></p>
+      <div id="disiplin-body"></div>
+    </section>
   </main>
 
   <script src="../js/api.js"></script>
+  <script src="../js/ui.js"></script>
   <script src="../js/guard.js"></script>
   <script>
   (function () {
@@ -189,6 +237,130 @@
 
     semEl.addEventListener('change', loadStatusNilai);
     loadStatusNilai();
+
+    // ---------- Kelola Akun ----------
+    var usersStatus = document.getElementById('users-status');
+    var usersTable = document.getElementById('users-table');
+    var formUser = document.getElementById('form-user');
+    var uSubmit = document.getElementById('u-submit');
+    var uStatus = document.getElementById('u-status');
+    var uRole = document.getElementById('u-role');
+    var uRefId = document.getElementById('u-refid');
+
+    function syncRefId() {
+      var isAdmin = uRole.value === 'admin';
+      uRefId.disabled = isAdmin;
+      if (isAdmin) uRefId.value = '';
+    }
+    uRole.addEventListener('change', syncRefId);
+    syncRefId();
+
+    function loadUsers() {
+      usersStatus.className = 'status-msg info';
+      usersStatus.textContent = 'Memuat daftar user...';
+      usersStatus.hidden = false;
+      usersTable.innerHTML = '';
+
+      apiCall('getDaftarUser', {}).then(function (r) {
+        console.log('getDaftarUser ->', r);
+        if (!r || !r.success) {
+          usersStatus.className = 'status-msg err';
+          usersStatus.textContent = (r && r.message) || 'Gagal memuat daftar user.';
+          return;
+        }
+        usersStatus.hidden = true;
+        var rows = firstArray(r.data, ['users', 'data', 'list', 'user']);
+        // Kolom eksplisit -> password (kalau ada di response) tidak akan ikut tampil.
+        buildTable(usersTable, [
+          { label: 'Username', get: function (x) { return pick(x, ['username', 'user', 'Username']); } },
+          { label: 'Role', get: function (x) { return pick(x, ['role', 'Role']); } },
+          { label: 'Nama', get: function (x) { return pick(x, ['nama', 'name', 'Nama']); } },
+          { label: 'Status', get: function (x) { return pick(x, ['status', 'Status', 'aktif']); } }
+        ], rows, 'Belum ada user.');
+      }).catch(function (err) {
+        usersStatus.className = 'status-msg err';
+        usersStatus.textContent = 'Tidak dapat terhubung ke server.';
+        console.error(err);
+      });
+    }
+
+    formUser.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var role = uRole.value;
+      var payload = {
+        username: document.getElementById('u-username').value.trim(),
+        password: document.getElementById('u-password').value,
+        role: role,
+        nama: document.getElementById('u-nama').value.trim(),
+        refId: role === 'admin' ? '' : uRefId.value.trim()
+      };
+
+      uSubmit.disabled = true;
+      setMsg(uStatus, 'info', 'Menyimpan...');
+      try {
+        var r = await apiCall('tambahUser', payload);
+        if (r && r.success) {
+          setMsg(uStatus, 'ok', 'User "' + payload.username + '" ditambahkan.');
+          formUser.reset();
+          syncRefId();
+          loadUsers();
+        } else {
+          setMsg(uStatus, 'err', (r && r.message) || 'Gagal menambah user.');
+        }
+      } catch (err) {
+        setMsg(uStatus, 'err', 'Tidak dapat terhubung ke server.');
+        console.error(err);
+      } finally {
+        uSubmit.disabled = false;
+      }
+    });
+
+    loadUsers();
+
+    // ---------- Rekap Disiplin Guru ----------
+    var disStatus = document.getElementById('disiplin-status');
+    var disBody = document.getElementById('disiplin-body');
+
+    function renderListBlock(title, arr, kind) {
+      var html = '<p class="subhead">' + esc(title) + '</p>';
+      if (!arr.length) {
+        html += '<p class="status-msg ' + kind + '">Tidak ada.</p>';
+        return html;
+      }
+      html += '<ul class="list-plain">';
+      arr.forEach(function (g) {
+        var nama = (typeof g === 'string') ? g : (g.nama || g.name || g.guru || JSON.stringify(g));
+        html += '<li>' + esc(nama) + '</li>';
+      });
+      html += '</ul>';
+      return html;
+    }
+
+    (function loadDisiplin() {
+      disStatus.className = 'status-msg info';
+      disStatus.textContent = 'Memuat...';
+      disStatus.hidden = false;
+
+      apiCall('getRekapDisiplinGuru', {}).then(function (r) {
+        console.log('getRekapDisiplinGuru ->', r);
+        if (!r || !r.success) {
+          disStatus.className = 'status-msg err';
+          disStatus.textContent = (r && r.message) || 'Gagal memuat rekap disiplin.';
+          return;
+        }
+        disStatus.hidden = true;
+        var data = r.data || {};
+        var lengkap = firstArray(data, ['lengkap']);
+        var bolong = firstArray(data, ['bolong']);
+        disBody.innerHTML =
+          renderListBlock('Minggu Lengkap (' + lengkap.length + ')', lengkap, 'ok') +
+          renderListBlock('Minggu Bolong (' + bolong.length + ')', bolong, 'err');
+      }).catch(function (err) {
+        disStatus.className = 'status-msg err';
+        disStatus.textContent = 'Tidak dapat terhubung ke server.';
+        console.error(err);
+      });
+    })();
   })();
   </script>
 </body>
