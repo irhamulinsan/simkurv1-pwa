@@ -170,35 +170,35 @@
         var data = r.data || {};
 
         // --- Tabel nilai: Mapel | B1 | B2 | B3 | UAS | Nilai Akhir ---
-        var nilaiRows = firstArray(data, ['nilai', 'mapel', 'raport', 'list', 'rows']);
+        var nilaiRows = Array.isArray(data.nilai) ? data.nilai : [];
         buildTable(rapTable, [
-          { label: 'Mapel', get: function (x) { return pick(x, ['mapel', 'namaMapel', 'mapelNama', 'name', 'mataPelajaran']); } },
-          { label: 'B1', get: function (x) { return pick(x, ['b1', 'B1', 'bulan1']); } },
-          { label: 'B2', get: function (x) { return pick(x, ['b2', 'B2', 'bulan2']); } },
-          { label: 'B3', get: function (x) { return pick(x, ['b3', 'B3', 'bulan3']); } },
-          { label: 'UAS', get: function (x) { return pick(x, ['uas', 'UAS']); } },
-          { label: 'Nilai Akhir', get: function (x) { return pick(x, ['nilaiAkhir', 'nilai_akhir', 'na', 'NA', 'akhir']); } }
+          { label: 'Mapel', get: function (x) { return x.mapel; } },
+          { label: 'B1', get: function (x) { return x.b1; } },
+          { label: 'B2', get: function (x) { return x.b2; } },
+          { label: 'B3', get: function (x) { return x.b3; } },
+          { label: 'UAS', get: function (x) { return x.uas; } },
+          { label: 'Nilai Akhir', get: function (x) { return x.akhir; } }
         ], nilaiRows, 'Belum ada nilai untuk semester ini.');
 
         // --- Kehadiran (field kehadiran dari response yang sama) ---
-        var keh = data.kehadiran || data.absensi || null;
+        var keh = data.kehadiran || null;
         if (keh && typeof keh === 'object') {
           rapKehadiran.innerHTML =
-            kehRow('Sakit', pick(keh, ['sakit', 's', 'S'])) +
-            kehRow('Izin', pick(keh, ['izin', 'i', 'I'])) +
-            kehRow('Tanpa Keterangan', pick(keh, ['tanpaKeterangan', 'tanpa_keterangan', 'alpha', 'alfa', 'a', 'A', 'tk']));
+            kehRow('Sakit', keh.sakit) +
+            kehRow('Izin', keh.izin) +
+            kehRow('Tanpa Keterangan', keh.tanpaKeterangan);
         } else {
           sectionMsg(rapKehadiran, 'info', 'Belum ada data.');
         }
 
         // --- Info tambahan (field tambahan dari response yang sama) ---
-        var tmb = data.tambahan || data.info || data.dataTambahan || null;
+        var tmb = data.tambahan || null;
         if (tmb && typeof tmb === 'object') {
           rapTambahan.innerHTML = [
-            ['Catatan', pick(tmb, ['catatan', 'notes'])],
-            ['Ekskul', pick(tmb, ['ekskul', 'ekstrakurikuler'])],
-            ['Hafalan', pick(tmb, ['hafalan', 'tahfidz'])],
-            ['Literasi', pick(tmb, ['literasi'])]
+            ['Catatan', tmb.catatan],
+            ['Ekskul', tmb.ekskul],
+            ['Hafalan', tmb.hafalan],
+            ['Literasi', tmb.literasi]
           ].map(function (f) {
             var val = (f[1] === '' || f[1] == null)
               ? '<span class="muted">Belum ada data</span>'
@@ -219,7 +219,7 @@
 
     function kehRow(label, val) {
       return '<div class="nilai-item"><span class="mapel">' + label +
-             '</span><span class="angka">' + esc(val === '' ? 0 : val) + '</span></div>';
+             '</span><span class="angka">' + esc(val == null ? 0 : val) + '</span></div>';
     }
   })();
   </script>

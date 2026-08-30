@@ -34,14 +34,6 @@ function firstArray(obj, keys) {
   return [];
 }
 
-/** ISO date -> dd-mm-yyyy. Selain itu dikembalikan apa adanya. */
-function fmtDate(v) {
-  if (!v) return '';
-  var s = String(v);
-  var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  return m ? (m[3] + '-' + m[2] + '-' + m[1]) : s;
-}
-
 /**
  * Bangun tabel sederhana (scroll horizontal di layar kecil) ke dalam container.
  *

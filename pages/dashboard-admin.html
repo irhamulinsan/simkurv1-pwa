@@ -321,19 +321,27 @@
     var disStatus = document.getElementById('disiplin-status');
     var disBody = document.getElementById('disiplin-body');
 
-    function renderListBlock(title, arr, kind) {
-      var html = '<p class="subhead">' + esc(title) + '</p>';
+    var DISIPLIN_COLS = [
+      { label: 'Nama', get: function (x) { return x.nama; } },
+      { label: 'Minggu Lengkap', get: function (x) { return x.mingguLengkap; } },
+      { label: 'Minggu Bolong', get: function (x) { return x.mingguBolong; } }
+    ];
+
+    function renderDisiplinBlock(title, arr, kind) {
+      var box = document.createElement('div');
+      var head = document.createElement('p');
+      head.className = 'subhead';
+      head.textContent = title;
+      box.appendChild(head);
+
+      var body = document.createElement('div');
       if (!arr.length) {
-        html += '<p class="status-msg ' + kind + '">Tidak ada.</p>';
-        return html;
+        body.innerHTML = '<p class="status-msg ' + kind + '">Tidak ada.</p>';
+      } else {
+        buildTable(body, DISIPLIN_COLS, arr);
       }
-      html += '<ul class="list-plain">';
-      arr.forEach(function (g) {
-        var nama = (typeof g === 'string') ? g : (g.nama || g.name || g.guru || JSON.stringify(g));
-        html += '<li>' + esc(nama) + '</li>';
-      });
-      html += '</ul>';
-      return html;
+      box.appendChild(body);
+      return box;
     }
 
     (function loadDisiplin() {
@@ -350,11 +358,11 @@
         }
         disStatus.hidden = true;
         var data = r.data || {};
-        var lengkap = firstArray(data, ['lengkap']);
-        var bolong = firstArray(data, ['bolong']);
-        disBody.innerHTML =
-          renderListBlock('Minggu Lengkap (' + lengkap.length + ')', lengkap, 'ok') +
-          renderListBlock('Minggu Bolong (' + bolong.length + ')', bolong, 'err');
+        var lengkap = Array.isArray(data.lengkap) ? data.lengkap : [];
+        var bolong = Array.isArray(data.bolong) ? data.bolong : [];
+        disBody.innerHTML = '';
+        disBody.appendChild(renderDisiplinBlock('Minggu Lengkap (' + lengkap.length + ')', lengkap, 'ok'));
+        disBody.appendChild(renderDisiplinBlock('Minggu Bolong (' + bolong.length + ')', bolong, 'err'));
       }).catch(function (err) {
         disStatus.className = 'status-msg err';
         disStatus.textContent = 'Tidak dapat terhubung ke server.';

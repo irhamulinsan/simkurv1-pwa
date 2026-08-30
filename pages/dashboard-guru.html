@@ -320,6 +320,13 @@
     });
 
     // ---------- Section read-only: Jadwal / Riwayat KBM / Riwayat Absensi ----------
+
+    // tanggal riwayat sudah string "dd/MM/yyyy" -> jadikan key "yyyyMMdd" untuk sorting.
+    function dmyKey(s) {
+      var m = String(s || '').match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      return m ? (m[3] + m[2] + m[1]) : String(s || '');
+    }
+
     function loadSection(opts) {
       var statusEl = opts.status;
       statusEl.className = 'status-msg info';
@@ -334,10 +341,11 @@
           statusEl.textContent = (r && r.message) || 'Gagal memuat data.';
           return;
         }
-        var rows = firstArray(r.data, ['data', 'list', 'rows', 'jadwal', 'riwayat', 'kbm', 'absensi']);
+        var rows = opts.getRows(r);
         if (opts.sortDescBy) {
           rows = rows.slice().sort(function (a, b) {
-            return String(opts.sortDescBy(b)).localeCompare(String(opts.sortDescBy(a)));
+            var ka = opts.sortDescBy(a), kb = opts.sortDescBy(b);
+            return ka < kb ? 1 : ka > kb ? -1 : 0;
           });
         }
         statusEl.hidden = true;
@@ -361,11 +369,13 @@
       status: document.getElementById('jadwal-status'),
       table: document.getElementById('jadwal-table'),
       empty: 'Belum ada jadwal.',
+      // response ter-nested: array ada di data.data
+      getRows: function (r) { return (r.data && Array.isArray(r.data.data)) ? r.data.data : []; },
       columns: [
-        { label: 'Hari', get: function (x) { return pick(x, ['hari', 'day', 'Hari']); } },
-        { label: 'Sesi', get: function (x) { return pick(x, ['sesi', 'jam', 'Sesi']); } },
-        { label: 'Mapel', get: function (x) { return pick(x, ['mapel', 'namaMapel', 'Mapel', 'mataPelajaran']); } },
-        { label: 'Kelas', get: function (x) { return pick(x, ['kelas', 'namaKelas', 'Kelas', 'kelasId']); } }
+        { label: 'Hari', get: function (x) { return x.hari; } },
+        { label: 'Sesi', get: function (x) { return x.sesi; } },
+        { label: 'Mapel', get: function (x) { return x.mapel; } },
+        { label: 'Kelas', get: function (x) { return x.kelas; } }
       ]
     };
     var rkbmOpts = {
@@ -373,13 +383,14 @@
       status: document.getElementById('rkbm-status'),
       table: document.getElementById('rkbm-table'),
       empty: 'Belum ada riwayat KBM.',
-      sortDescBy: function (x) { return pick(x, ['tanggal', 'tgl', 'date', 'Tanggal']); },
+      getRows: function (r) { return Array.isArray(r.data) ? r.data : []; },
+      sortDescBy: function (x) { return dmyKey(x.tanggal); },
       columns: [
-        { label: 'Tanggal', get: function (x) { return fmtDate(pick(x, ['tanggal', 'tgl', 'date', 'Tanggal'])); } },
-        { label: 'Kelas', get: function (x) { return pick(x, ['kelas', 'namaKelas', 'Kelas', 'kelasId']); } },
-        { label: 'Mapel', get: function (x) { return pick(x, ['mapel', 'namaMapel', 'Mapel', 'mataPelajaran']); } },
-        { label: 'Materi', get: function (x) { return pick(x, ['materi', 'Materi']); } },
-        { label: 'Status', get: function (x) { return pick(x, ['status', 'Status', 'kehadiran']); } }
+        { label: 'Tanggal', get: function (x) { return x.tanggal; } },
+        { label: 'Kelas', get: function (x) { return x.kelas; } },
+        { label: 'Mapel', get: function (x) { return x.mapel; } },
+        { label: 'Materi', get: function (x) { return x.materi; } },
+        { label: 'Status', get: function (x) { return x.status; } }
       ]
     };
     var rabsOpts = {
@@ -387,11 +398,12 @@
       status: document.getElementById('rabs-status'),
       table: document.getElementById('rabs-table'),
       empty: 'Belum ada riwayat absensi.',
-      sortDescBy: function (x) { return pick(x, ['tanggal', 'tgl', 'date', 'Tanggal']); },
+      getRows: function (r) { return Array.isArray(r.data) ? r.data : []; },
+      sortDescBy: function (x) { return dmyKey(x.tanggal); },
       columns: [
-        { label: 'Tanggal', get: function (x) { return fmtDate(pick(x, ['tanggal', 'tgl', 'date', 'Tanggal'])); } },
-        { label: 'Status', get: function (x) { return pick(x, ['status', 'Status']); } },
-        { label: 'Alasan', get: function (x) { return pick(x, ['alasan', 'keterangan', 'ket', 'Alasan']); } }
+        { label: 'Tanggal', get: function (x) { return x.tanggal; } },
+        { label: 'Status', get: function (x) { return x.status; } },
+        { label: 'Alasan', get: function (x) { return x.alasan; } }
       ]
     };
 
