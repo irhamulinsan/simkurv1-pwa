@@ -35,6 +35,7 @@
         <a class="snav" data-sec="sec-raport" href="#sec-raport"><span class="ic">📋</span> Raport</a>
         <a class="snav" data-sec="sec-kehadiran" href="#sec-kehadiran"><span class="ic">✅</span> Kehadiran</a>
         <a class="snav" data-sec="sec-info" href="#sec-info"><span class="ic">ℹ️</span> Info Tambahan</a>
+        <a class="snav" data-sec="sec-agenda" href="#sec-agenda"><span class="ic">📅</span> Kalender / Agenda</a>
       </nav>
       <div class="side-foot">
         <button type="button" class="btn-logout" id="btn-logout" data-logout>Keluar</button>
@@ -82,6 +83,13 @@
         <p class="status-msg info">Tekan &ldquo;Lihat Raport&rdquo; dulu.</p>
       </div>
     </section>
+
+    <!-- ============ KALENDER / AGENDA ============ -->
+    <section class="card" id="sec-agenda">
+      <h2>Kalender / Agenda</h2>
+      <p class="status-msg info" id="agenda-status" hidden></p>
+      <div id="agenda-list"></div>
+    </section>
     </main>
   </div>
 
@@ -90,6 +98,7 @@
     <a class="bnv" data-sec="sec-raport" href="#sec-raport"><span class="ic">📋</span>Raport</a>
     <a class="bnv" data-sec="sec-kehadiran" href="#sec-kehadiran"><span class="ic">✅</span>Hadir</a>
     <a class="bnv" data-sec="sec-info" href="#sec-info"><span class="ic">ℹ️</span>Info</a>
+    <a class="bnv" data-sec="sec-agenda" href="#sec-agenda"><span class="ic">📅</span>Agenda</a>
   </nav>
 
   <script src="../js/api.js"></script>
@@ -253,6 +262,30 @@
       return '<div class="nilai-item"><span class="mapel">' + label +
              '</span><span class="angka">' + esc(val == null ? 0 : val) + '</span></div>';
     }
+
+    // ---------- Kalender / Agenda ----------
+    (function loadAgenda() {
+      var st = document.getElementById('agenda-status');
+      var box = document.getElementById('agenda-list');
+      st.className = 'status-msg info';
+      st.textContent = 'Memuat...';
+      st.hidden = false;
+
+      apiCall('getAgenda', {}).then(function (r) {
+        console.log('getAgenda ->', r);
+        if (!r || !r.success) {
+          st.className = 'status-msg err';
+          st.textContent = (r && r.message) || 'Gagal memuat agenda.';
+          return;
+        }
+        st.hidden = true;
+        renderAgenda(box, Array.isArray(r.data) ? r.data : []);
+      }).catch(function (err) {
+        st.className = 'status-msg err';
+        st.textContent = 'Tidak dapat terhubung ke server.';
+        console.error(err);
+      });
+    })();
   })();
   </script>
 </body>

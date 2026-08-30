@@ -69,3 +69,31 @@ function buildTable(container, columns, rows, emptyMsg) {
   html += '</tbody></table></div>';
   container.innerHTML = html;
 }
+
+/**
+ * Render daftar agenda ke container.
+ * rows: array {tgl, bulan, kegiatan, kelompok, ket}
+ * Judul tiap item: "Tanggal - Bulan - Nama Kegiatan".
+ * kelompok & ket -> baris info kecil di bawah judul.
+ */
+function renderAgenda(container, rows) {
+  if (!Array.isArray(rows) || !rows.length) {
+    sectionMsg(container, 'info', 'Belum ada agenda.');
+    return;
+  }
+
+  function join(parts, sep) {
+    return parts
+      .filter(function (x) { return x != null && String(x).trim() !== ''; })
+      .join(sep);
+  }
+
+  container.innerHTML = '<div class="agenda-list">' + rows.map(function (a) {
+    var judul = join([a.tgl, a.bulan, a.kegiatan], ' - ');
+    var meta = join([a.kelompok, a.ket], ' · ');
+    return '<div class="agenda-item">' +
+      '<div class="agenda-keg">' + esc(judul) + '</div>' +
+      (meta ? '<div class="agenda-meta">' + esc(meta) + '</div>' : '') +
+      '</div>';
+  }).join('') + '</div>';
+}
