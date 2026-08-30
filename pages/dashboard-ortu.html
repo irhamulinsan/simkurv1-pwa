@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#f18518">
-  <title>Nilai Anak &middot; SIMKUR MA'HAD</title>
+  <title>Dashboard Wali &middot; SIMKUR MA'HAD</title>
   <link rel="manifest" href="../manifest.json">
   <link rel="icon" href="../icons/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,7 +31,6 @@
         <div class="brand-sub js-nama">&nbsp;</div>
       </div>
       <nav class="side-nav">
-        <a class="snav" data-sec="sec-nilai" href="#sec-nilai"><span class="ic">📖</span> Nilai Anak</a>
         <a class="snav" data-sec="sec-raport" href="#sec-raport"><span class="ic">📋</span> Raport</a>
         <a class="snav" data-sec="sec-kehadiran" href="#sec-kehadiran"><span class="ic">✅</span> Kehadiran</a>
         <a class="snav" data-sec="sec-info" href="#sec-info"><span class="ic">ℹ️</span> Info Tambahan</a>
@@ -43,16 +42,6 @@
     </aside>
 
     <main class="main">
-    <section class="card" id="sec-nilai">
-      <h2>Nilai Anak</h2>
-      <p class="status-msg info" id="nilai-status">Memuat...</p>
-      <div id="nilai-body"></div>
-      <details class="raw" id="raw-wrap" hidden>
-        <summary>Lihat data mentah</summary>
-        <pre id="nilai-raw"></pre>
-      </details>
-    </section>
-
     <!-- ============ RAPORT ============ -->
     <section class="card" id="sec-raport">
       <h2>Raport</h2>
@@ -94,7 +83,6 @@
   </div>
 
   <nav class="bottomnav">
-    <a class="bnv" data-sec="sec-nilai" href="#sec-nilai"><span class="ic">📖</span>Nilai</a>
     <a class="bnv" data-sec="sec-raport" href="#sec-raport"><span class="ic">📋</span>Raport</a>
     <a class="bnv" data-sec="sec-kehadiran" href="#sec-kehadiran"><span class="ic">✅</span>Hadir</a>
     <a class="bnv" data-sec="sec-info" href="#sec-info"><span class="ic">ℹ️</span>Info</a>
@@ -112,76 +100,6 @@
     var user = currentUser();
     document.getElementById('nama-ortu').textContent = user.nama || 'Wali Santri';
     document.getElementById('btn-logout').addEventListener('click', logout);
-
-    var statusEl = document.getElementById('nilai-status');
-    var bodyEl = document.getElementById('nilai-body');
-
-    function setMsg(kind, msg) {
-      statusEl.className = 'status-msg ' + kind;
-      statusEl.textContent = msg;
-      statusEl.hidden = false;
-    }
-
-    // Ubah bentuk apa pun jadi [{ mapel, nilai }].
-    function normalize(data) {
-      if (!data) return [];
-      var arr = Array.isArray(data) ? data
-              : (data.nilai || data.mapel || data.data || data.list || null);
-
-      if (Array.isArray(arr)) {
-        return arr.map(function (it) {
-          if (it && typeof it === 'object') {
-            return {
-              mapel: it.mapel || it.namaMapel || it.mapelNama || it.name || it.mataPelajaran || '(mapel)',
-              nilai: it.nilai != null ? it.nilai : (it.nilaiAkhir != null ? it.nilaiAkhir : it.value)
-            };
-          }
-          return { mapel: String(it), nilai: '' };
-        });
-      }
-
-      // objek { "Fiqih": 88, "Nahwu": 90, ... }
-      if (data && typeof data === 'object') {
-        return Object.keys(data).map(function (k) {
-          return { mapel: k, nilai: data[k] };
-        });
-      }
-      return [];
-    }
-
-    (async function load() {
-      try {
-        var r = await apiCall('getNilaiAnak', {});
-        console.log('getNilaiAnak ->', r);
-
-        if (!r || !r.success) {
-          setMsg('err', (r && r.message) || 'Gagal memuat nilai.');
-          return;
-        }
-
-        document.getElementById('nilai-raw').textContent = JSON.stringify(r.data, null, 2);
-        document.getElementById('raw-wrap').hidden = false;
-
-        var list = normalize(r.data).filter(function (x) {
-          return x.nilai !== undefined && x.nilai !== null && x.nilai !== '';
-        });
-
-        if (!list.length) {
-          setMsg('info', 'Belum ada nilai.');
-          return;
-        }
-
-        statusEl.hidden = true;
-        bodyEl.innerHTML = list.map(function (x) {
-          return '<div class="nilai-item"><span class="mapel">' +
-                 String(x.mapel) + '</span><span class="angka">' +
-                 String(x.nilai) + '</span></div>';
-        }).join('');
-      } catch (err) {
-        setMsg('err', 'Tidak dapat terhubung ke server.');
-        console.error(err);
-      }
-    })();
 
     // ---------- Raport + Kehadiran + Info Tambahan (satu response) ----------
     var rapSem = document.getElementById('rap-semester');

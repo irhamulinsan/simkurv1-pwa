@@ -497,6 +497,21 @@ table.simple th {
   font-weight: 700;
 }
 
+/* badge status (mis. Status Nilai Guru) */
+.badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.badge-ok   { background: var(--pl); color: var(--pd); }
+.badge-err  { background: var(--rl); color: #9b1c1c; }
+.badge-warn { background: var(--yl); color: #92600a; }
+
+.guru-blok + .guru-blok { margin-top: 8px; }
+
 /* list nilai (ortu) */
 .nilai-item {
   display: flex;

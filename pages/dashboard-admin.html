@@ -69,7 +69,7 @@
         </select>
       </div>
       <p class="status-msg info" id="status-nilai-msg" hidden></p>
-      <div class="table-wrap" id="status-nilai-table"></div>
+      <div id="status-nilai-table"></div>
     </section>
 
     <!-- ============ CETAK RAPORT ============ -->
@@ -202,45 +202,6 @@
       el.hidden = false;
     }
 
-    // Render array-of-objects jadi tabel sederhana.
-    function renderTable(container, rows) {
-      container.innerHTML = '';
-      if (!Array.isArray(rows) || !rows.length) {
-        var p = document.createElement('p');
-        p.className = 'status-msg info';
-        p.textContent = 'Tidak ada data.';
-        container.appendChild(p);
-        return;
-      }
-      var cols = Object.keys(rows[0]);
-      var table = document.createElement('table');
-      table.className = 'simple';
-
-      var thead = document.createElement('thead');
-      var htr = document.createElement('tr');
-      cols.forEach(function (c) {
-        var th = document.createElement('th');
-        th.textContent = c;
-        htr.appendChild(th);
-      });
-      thead.appendChild(htr);
-      table.appendChild(thead);
-
-      var tbody = document.createElement('tbody');
-      rows.forEach(function (row) {
-        var tr = document.createElement('tr');
-        cols.forEach(function (c) {
-          var td = document.createElement('td');
-          var v = row[c];
-          td.textContent = (v && typeof v === 'object') ? JSON.stringify(v) : String(v == null ? '' : v);
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      });
-      table.appendChild(tbody);
-      container.appendChild(table);
-    }
-
     // Coba tebak daftar dari beberapa nama field yang mungkin.
     function pickArray(obj, keys) {
       for (var i = 0; i < keys.length; i++) {
@@ -305,20 +266,62 @@
     var snMsg = document.getElementById('status-nilai-msg');
     var snTable = document.getElementById('status-nilai-table');
 
+    function statusBadge(item) {
+      if (item.lengkapPenuh) return '<span class="badge badge-ok">Lengkap</span>';
+      if (item.belumSamaSekali) return '<span class="badge badge-err">Belum ada nilai</span>';
+      return '<span class="badge badge-warn">Sebagian</span>';
+    }
+
+    function renderStatusNilai(container, guruList) {
+      if (!Array.isArray(guruList) || !guruList.length) {
+        sectionMsg(container, 'info', 'Belum ada data.');
+        return;
+      }
+      var html = '';
+      guruList.forEach(function (g) {
+        html += '<div class="guru-blok">';
+        html += '<p class="subhead">' + esc(g.guru) + ' — ' +
+                esc(g.jumlahLengkap) + '/' + esc(g.jumlahTotal) + ' mapel lengkap</p>';
+
+        var daftar = Array.isArray(g.daftar) ? g.daftar : [];
+        if (!daftar.length) {
+          html += '<p class="status-msg info">Tidak ada mapel.</p>';
+        } else {
+          html += '<div class="table-wrap"><table class="simple"><thead><tr>' +
+                  '<th>Kelas</th><th>Mapel</th><th>Total Santri</th>' +
+                  '<th>B1</th><th>B2</th><th>B3</th><th>UAS</th><th>Status</th>' +
+                  '</tr></thead><tbody>';
+          daftar.forEach(function (d) {
+            html += '<tr>' +
+              '<td>' + esc(d.kelas) + '</td>' +
+              '<td>' + esc(d.mapel) + '</td>' +
+              '<td>' + esc(d.totalSantri) + '</td>' +
+              '<td>' + esc(d.b1) + '</td>' +
+              '<td>' + esc(d.b2) + '</td>' +
+              '<td>' + esc(d.b3) + '</td>' +
+              '<td>' + esc(d.uas) + '</td>' +
+              '<td>' + statusBadge(d) + '</td>' +
+              '</tr>';
+          });
+          html += '</tbody></table></div>';
+        }
+        html += '</div>';
+      });
+      container.innerHTML = html;
+    }
+
     async function loadStatusNilai() {
       setMsg(snMsg, 'info', 'Memuat...');
       snTable.innerHTML = '';
       try {
         var r = await apiCall('getStatusNilaiGuru', { semester: semEl.value });
         console.log('getStatusNilaiGuru ->', r);
-        if (!r || !r.success) {
-          setMsg(snMsg, 'err', (r && r.message) || 'Gagal memuat status nilai.');
+        if (!r || r.ok !== true) {
+          setMsg(snMsg, 'err', (r && (r.message || r.error)) || 'Gagal memuat status nilai.');
           return;
         }
-        var rows = Array.isArray(r.data) ? r.data
-                 : pickArray(r.data || {}, ['status', 'data', 'guru', 'list']) || [];
         snMsg.hidden = true;
-        renderTable(snTable, rows);
+        renderStatusNilai(snTable, r.guru);
       } catch (err) {
         setMsg(snMsg, 'err', 'Tidak dapat terhubung ke server.');
         console.error(err);
