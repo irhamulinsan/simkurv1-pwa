@@ -70,6 +70,18 @@ function buildTable(container, columns, rows, emptyMsg) {
   container.innerHTML = html;
 }
 
+/** Samakan bentuk daftar santri dari getSantriPerKelas -> [{strId, nama}]. */
+function normalizeSantri(data) {
+  var arr = Array.isArray(data) ? data
+          : (data && (data.santri || data.data || data.list)) || [];
+  return arr.map(function (s) {
+    return {
+      strId: s.strId || s.id || s.STR_ID || s.strID || '',
+      nama: s.nama || s.name || s.namaSantri || s.NAMA || '(tanpa nama)'
+    };
+  });
+}
+
 /**
  * Render daftar agenda ke container.
  * rows: array {tgl, bulan, kegiatan, kelompok, ket}

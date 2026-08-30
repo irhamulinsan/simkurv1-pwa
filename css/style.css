@@ -433,6 +433,10 @@ input[type="number"]:focus {
 .btn-block:active { background: var(--accent-darker); }
 .btn-block:disabled { opacity: 0.65; cursor: default; }
 
+a.btn-block { text-align: center; text-decoration: none; }
+
+.btn-block.busy { opacity: 0.75; cursor: progress; }
+
 /* baris santri untuk input nilai */
 .santri-row {
   display: flex;
